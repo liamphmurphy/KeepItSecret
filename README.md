@@ -28,6 +28,30 @@ make test-race
 make vet
 ```
 
+Run the API and Next.js services together in Docker Compose and exercise their
+HTTP lifecycle:
+
+```sh
+make test-compose
+```
+
+This builds the production API and Next.js images, waits for both services,
+creates and claims a secret through the Next.js proxy, verifies decryption,
+and confirms that a second claim is rejected.
+
+Run the stack interactively for local development:
+
+```sh
+make run
+```
+
+The web app is available at <http://127.0.0.1:13000>. Stop the services with
+`Ctrl-C`, then clean up the Compose resources with:
+
+```sh
+make stop
+```
+
 Build the API with the same Nix-pinned Go toolchain:
 
 ```sh

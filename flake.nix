@@ -51,6 +51,7 @@
             src = ./api;
             vendorHash = null;
             subPackages = [ "cmd/api" ];
+            env.CGO_ENABLED = "0";
             ldflags = [ "-s" "-w" ];
             postInstall = ''
               mv "$out/bin/api" "$out/bin/keepitsecret-api"
