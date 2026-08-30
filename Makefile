@@ -1,14 +1,18 @@
 NIX ?= nix
+COMPOSE ?= docker compose -f compose.integration.yaml
 
 .DEFAULT_GOAL := help
 
-.PHONY: help develop test test-integration test-race vet fmt lint build docker-build check update-lock
+.PHONY: help develop run stop test test-integration test-compose test-race vet fmt lint build docker-build check update-lock
 
 help:
 	@printf '%s\n' \
 		'make develop          Enter the Nix development shell' \
+		'make run              Build and run the local API + Next.js stack' \
+		'make stop             Stop the local Compose stack' \
 		'make test             Run unit tests' \
 		'make test-integration Run integration tests' \
+		'make test-compose     Run API + Next.js Compose integration smoke test' \
 		'make test-race        Run tests with the race detector' \
 		'make vet              Run go vet' \
 		'make fmt              Format the API' \
@@ -21,11 +25,20 @@ help:
 develop:
 	$(NIX) develop
 
+run:
+	$(COMPOSE) up --build
+
+stop:
+	$(COMPOSE) down --remove-orphans
+
 test:
 	$(NIX) develop --command go -C api test ./...
 
 test-integration:
 	$(NIX) develop --command go -C api test -tags=integration ./...
+
+test-compose:
+	./scripts/test-compose.sh
 
 test-race:
 	$(NIX) develop --command go -C api test -race ./...
