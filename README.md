@@ -58,3 +58,41 @@ build flags. Build it from the repository root with:
 ```sh
 make docker-build
 ```
+
+## Run locally in Kubernetes with kind
+
+Install [kind](https://kind.sigs.k8s.io/), `kubectl`, Helm, Docker, and Nix.
+Then run the following commands from the repository root:
+
+```sh
+kind create cluster --name keepitsecret
+docker build -f api/Dockerfile -t keepitsecret-api:local .
+kind load docker-image keepitsecret-api:local --name keepitsecret
+
+helm upgrade --install keepitsecret-api ./api/charts/keepitsecret-api \
+  --namespace keepitsecret \
+  --create-namespace \
+  --set image.repository=keepitsecret-api \
+  --set image.tag=local \
+  --set image.pullPolicy=IfNotPresent
+
+kubectl --namespace keepitsecret rollout status deployment/keepitsecret-api
+```
+
+Expose the API on `localhost:8080` and verify its health endpoint:
+
+```sh
+kubectl --namespace keepitsecret port-forward service/keepitsecret-api 8080:8080
+```
+
+In another terminal:
+
+```sh
+curl http://127.0.0.1:8080/api/v1/health/ready
+```
+
+When finished, remove the local cluster:
+
+```sh
+kind delete cluster --name keepitsecret
+```
