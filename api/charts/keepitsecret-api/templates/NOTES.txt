@@ -1,0 +1,9 @@
+1. Get the service endpoint:
+
+{{- if .Values.ingress.enabled }}
+  {{- range .Values.ingress.hosts }}
+  http{{ if $.Values.ingress.tls }}s{{ end }}://{{ .host }}
+  {{- end }}
+{{- else }}
+  kubectl port-forward svc/{{ include "keepitsecret-api.fullname" . }} 8080:{{ .Values.service.port }}
+{{- end }}
