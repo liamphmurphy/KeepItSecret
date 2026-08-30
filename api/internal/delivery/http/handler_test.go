@@ -19,7 +19,7 @@ func TestHandlerCreateAndClaim(t *testing.T) {
 	t.Parallel()
 	now := time.Date(2026, 8, 30, 12, 0, 0, 0, time.UTC)
 	service := usecase.NewSecretService(repository.NewMemorySecretRepository(), func() time.Time { return now })
-	handler := NewHandler(service, nil)
+	handler := Handler(NewServer(service, nil))
 
 	id := base64.RawURLEncoding.EncodeToString(bytes.Repeat([]byte{1}, 16))
 	requestBody := map[string]any{
@@ -47,7 +47,7 @@ func TestHandlerCreateAndClaim(t *testing.T) {
 	if response.Code != http.StatusOK {
 		t.Errorf("POST /api/v1/secrets/%s/claim status = %d, want %d", id, response.Code, http.StatusOK)
 	}
-	var claim secretResponse
+	var claim SecretResponse
 	if err := json.NewDecoder(response.Body).Decode(&claim); err != nil {
 		t.Fatalf("Decode(claim response) returned error: %v", err)
 	}
@@ -65,7 +65,7 @@ func TestHandlerCreateAndClaim(t *testing.T) {
 
 func TestHandlerRejectsMalformedJSON(t *testing.T) {
 	t.Parallel()
-	handler := NewHandler(usecase.NewSecretService(repository.NewMemorySecretRepository(), time.Now), nil)
+	handler := Handler(NewServer(usecase.NewSecretService(repository.NewMemorySecretRepository(), time.Now), nil))
 	request := httptest.NewRequest(http.MethodPost, "/api/v1/secrets", strings.NewReader("{"))
 	response := httptest.NewRecorder()
 	handler.ServeHTTP(response, request)
