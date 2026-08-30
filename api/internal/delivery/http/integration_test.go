@@ -18,7 +18,7 @@ import (
 func TestIntegrationSecretLifecycle(t *testing.T) {
 	now := time.Date(2026, 8, 30, 12, 0, 0, 0, time.UTC)
 	service := usecase.NewSecretService(repository.NewMemorySecretRepository(), func() time.Time { return now })
-	handler := NewHandler(service, nil)
+	handler := Handler(NewServer(service, nil))
 
 	id := base64.RawURLEncoding.EncodeToString(bytes.Repeat([]byte{7}, 16))
 	payload := map[string]any{

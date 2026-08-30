@@ -24,9 +24,11 @@ func main() {
 
 	repository := repository.NewMemorySecretRepository()
 	service := usecase.NewSecretService(repository, time.Now)
+	apiServer := httpdelivery.NewServer(service, logger)
+	router := httpdelivery.Handler(apiServer)
 	server := &http.Server{
 		Addr:              address,
-		Handler:           httpdelivery.NewHandler(service, logger),
+		Handler:           httpdelivery.NoStore(router),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       10 * time.Second,
 		WriteTimeout:      10 * time.Second,

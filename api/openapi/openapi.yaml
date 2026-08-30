@@ -1,0 +1,153 @@
+openapi: 3.0.3
+info:
+  title: Keep It Secret API
+  version: 1.0.0
+  description: API for creating and claiming one-time encrypted secrets.
+servers:
+  - url: /
+paths:
+  /api/v1/secrets:
+    post:
+      operationId: createSecret
+      summary: Create a one-time secret
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSecretRequest'
+      responses:
+        '201':
+          description: Secret created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateSecretResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/secrets/{secretID}/claim:
+    post:
+      operationId: claimSecret
+      summary: Claim a one-time secret
+      parameters:
+        - name: secretID
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Secret claimed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SecretResponse'
+        '404':
+          $ref: '#/components/responses/SecretUnavailable'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/health/live:
+    get:
+      operationId: liveHealth
+      summary: Check whether the process is alive
+      responses:
+        '200':
+          $ref: '#/components/responses/HealthOK'
+  /api/v1/health/ready:
+    get:
+      operationId: readyHealth
+      summary: Check whether the process is ready
+      responses:
+        '200':
+          $ref: '#/components/responses/HealthOK'
+components:
+  responses:
+    BadRequest:
+      description: Malformed request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    ValidationError:
+      description: Request failed validation
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    SecretUnavailable:
+      description: Secret does not exist, expired, or was already claimed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    HealthOK:
+      description: Service is healthy
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/HealthResponse'
+  schemas:
+    CreateSecretRequest:
+      type: object
+      required: [secretId, version, ciphertext, nonce, expiresAt]
+      additionalProperties: false
+      properties:
+        secretId:
+          type: string
+          description: Base64url-encoded identifier containing at least 16 bytes.
+        version:
+          type: integer
+          enum: [1]
+        ciphertext:
+          type: string
+          description: Raw, unpadded base64url-encoded ciphertext.
+        nonce:
+          type: string
+          description: Raw, unpadded base64url-encoded 12-byte nonce.
+        expiresAt:
+          type: string
+          format: date-time
+    CreateSecretResponse:
+      type: object
+      required: [secretId]
+      properties:
+        secretId:
+          type: string
+    SecretResponse:
+      type: object
+      required: [secretId, version, ciphertext, nonce, expiresAt]
+      properties:
+        secretId:
+          type: string
+        version:
+          type: integer
+        ciphertext:
+          type: string
+        nonce:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+    HealthResponse:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [ok]

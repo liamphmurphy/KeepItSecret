@@ -1,0 +1,6 @@
+package: httpdelivery
+output: internal/delivery/http/api.gen.go
+generate:
+  models: true
+  std-http-server: true
+  strict-server: true
