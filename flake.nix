@@ -22,6 +22,7 @@
         {
           default = pkgs.mkShell {
             packages = [
+              pkgs.gnumake
               pkgs.go_1_27
               pkgs.gopls
               pkgs.gotools
@@ -51,6 +52,9 @@
             vendorHash = null;
             subPackages = [ "cmd/api" ];
             ldflags = [ "-s" "-w" ];
+            postInstall = ''
+              mv "$out/bin/api" "$out/bin/keepitsecret-api"
+            '';
           };
 
           default = self.packages.${system}.api;

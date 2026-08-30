@@ -1,9 +1,12 @@
-FROM docker.io/library/golang:1.26 AS build
+FROM docker.io/nixos/nix:2.28.3 AS build
 
 WORKDIR /src
-COPY go.mod ./
-COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags='-s -w' -o /out/keepitsecret-api ./cmd/api
+COPY flake.nix flake.lock ./
+COPY api ./api
+RUN nix --extra-experimental-features 'nix-command flakes' \
+    build .#api --out-link /tmp/keepitsecret-api \
+    && mkdir -p /out \
+    && cp -L /tmp/keepitsecret-api/bin/keepitsecret-api /out/keepitsecret-api
 
 FROM gcr.io/distroless/static-debian12:nonroot
 COPY --from=build /out/keepitsecret-api /keepitsecret-api

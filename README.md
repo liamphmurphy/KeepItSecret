@@ -12,7 +12,7 @@ development tools.
 Install Nix with flakes enabled, then enter the project shell:
 
 ```sh
-nix develop
+make develop
 ```
 
 The shell provides the pinned Go toolchain, `gopls`, `gotools`, and
@@ -22,34 +22,39 @@ so Go does not silently download a different toolchain.
 Run the API checks from the repository root:
 
 ```sh
-nix develop --command go -C api test ./...
-nix develop --command go -C api test -tags=integration ./...
-nix develop --command go -C api test -race ./...
-nix develop --command go -C api vet ./...
+make test
+make test-integration
+make test-race
+make vet
 ```
 
 Build the API with the same Nix-pinned Go toolchain:
 
 ```sh
-nix build .#api
+make build
 ./result/bin/keepitsecret-api
 ```
 
 Validate the flake and all declared outputs with:
 
 ```sh
-nix flake check
+make check
 ```
 
 Update the pinned nixpkgs revision deliberately, then review the resulting
 lockfile and rerun the checks:
 
 ```sh
-nix flake lock --update-input nixpkgs
-nix flake check
+make update-lock
+make check
 ```
 
-The current `api/Dockerfile` remains a conventional multi-stage Docker build.
-The Nix build is the canonical reproducible Go build; a later container-build
-step can package its output directly so Docker and CI do not maintain a second
-Go-version declaration.
+Run `make help` to see all available development targets.
+
+The `api/Dockerfile` packages the same Nix-built API artifact into the minimal
+runtime image, so Docker and standalone Nix builds use the same Go toolchain and
+build flags. Build it from the repository root with:
+
+```sh
+make docker-build
+```
